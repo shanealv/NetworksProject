@@ -15,6 +15,7 @@ int WindowSize;
 int SockFD, PortNum, N;
 struct sockaddr_in Serv_Addr;
 struct hostent *Server;
+struct in_addr ip;
 
 int InitRequest();
 void Request(int packetNumFirst, int packetNumLast);
