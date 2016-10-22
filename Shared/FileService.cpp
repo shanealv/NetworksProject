@@ -14,7 +14,26 @@ streamsize filesize(const char* filename)
 	streamsize length = file.gcount();
 	file.clear();
 	file.seekg(0, ios_base::beg);
+	file.close();
 	return length;
+}
+
+void AllocateFile(const char* filename, long size)
+{
+	ofstream ofs(filename, ios::binary | ios::out);
+	ofs.seekp(size - 1);
+	ofs.write("", 1);
+	ofs.close();
+}
+
+long GetNumChunks(long fileSize)
+{
+	int numChunks = fileSize / BUFFER_SIZE;
+	if (fileSize % BUFFER_SIZE > 0)
+	{
+		numChunks++;
+	}
+	return numChunks;
 }
 
 char* ReadFile(const char * filename, int start, int end)
@@ -26,7 +45,7 @@ char* ReadFile(const char * filename, int start, int end)
 		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << end << endl;
 		return NULL;
 	}
-	ifstream inf(filename);
+	ifstream inf(filename, ios::in | ios::binary);
 	if (!inf)
 	{
 		cerr << "Could not open " << filename << endl;
@@ -35,25 +54,46 @@ char* ReadFile(const char * filename, int start, int end)
 
 	inf.seekg(start, ios::beg);
 	inf.read(buffer, diff);
+	inf.close();
 	return buffer;
 }
 
-char* WriteFile(const char * filename, int start, int end, char buffer[])
+void WriteFile(const char * filename, int start, int end, char buffer[])
 {
 	long diff = end - start;
 	if (diff > BUFFER_SIZE)
 	{
 		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << end << endl;
-		return NULL;
 	}
-	ofstream inf(filename);
-	if (!inf)
+	fstream outf(filename);
+	if (!outf)
 	{
 		cerr << "Could not open " << filename << endl;
-		return NULL;
 	}
 
-	inf.seekp(start, ios::beg);
-	inf.write(buffer, diff);
-	return buffer;
+	outf.seekp(start, ios::beg);
+	outf.write(buffer, diff);
+	outf.close();
+}
+
+char* CopyChunk(const char * filename, int chunkNumber, long fileSize)
+{
+	int start = chunkNumber * BUFFER_SIZE;
+	int end = start + BUFFER_SIZE;
+	if (end > fileSize)
+	{
+		end = fileSize;
+	}
+	return ReadFile(filename, start, end);
+}
+
+void SaveChunk(const char * filename, int chunkNumber, long fileSize, char buffer[])
+{
+	int start = chunkNumber * BUFFER_SIZE;
+	int end = start + BUFFER_SIZE;
+	if (end > fileSize)
+	{
+		end = fileSize;
+	}
+	WriteFile(filename, start, end, buffer);
 }
