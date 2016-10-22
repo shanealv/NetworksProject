@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
-#include <>
+#include <ios>
+#include "FileService.h"
 
 using namespace std;
 
@@ -16,13 +17,13 @@ streamsize filesize(const char* filename)
 	return length;
 }
 
-unsigned char[] ReadFile(const char * filename, int start, int stop)
+char* ReadFile(const char * filename, int start, int end)
 {
-	unsigned char buffer[] = new unsigned char[BUFFER_SIZE];
-	int diff = end - start;
+	char * buffer = new char[BUFFER_SIZE];
+	long diff = end - start;
 	if (diff > BUFFER_SIZE)
 	{
-		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << stop << endl;
+		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << end << endl;
 		return NULL;
 	}
 	ifstream inf(filename);
@@ -33,26 +34,26 @@ unsigned char[] ReadFile(const char * filename, int start, int stop)
 	}
 
 	inf.seekg(start, ios::beg);
-	inf.read(&buffer, diff);
+	inf.read(buffer, diff);
 	return buffer;
 }
 
-unsigned char[] WriteFile(const char * filename, int start, int stop, unsigned char buffer[])
+char* WriteFile(const char * filename, int start, int end, char buffer[])
 {
-	int diff = end - start;
+	long diff = end - start;
 	if (diff > BUFFER_SIZE)
 	{
-		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << stop << endl;
+		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << end << endl;
 		return NULL;
 	}
-	ifstream inf(filename);
+	ofstream inf(filename);
 	if (!inf)
 	{
 		cerr << "Could not open " << filename << endl;
 		return NULL;
 	}
 
-	inf.seekg(start, ios::beg);
-	inf.write(&buffer, diff);
+	inf.seekp(start, ios::beg);
+	inf.write(buffer, diff);
 	return buffer;
 }
