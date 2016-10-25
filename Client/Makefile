@@ -3,13 +3,13 @@ CFLAGS = -g
 # uncomment this for SunOS
 # LIBS = -lsocket -lnsl
 
-all: client server
+all: client testserver
 
 client: client.o 
 	$(CC) -o client client.o $(LIBS)
 
-server: server.o 
-	$(CC) -o server server.o $(LIBS)
+testserver: testserver.o 
+	$(CC) -o testserver testserver.o $(LIBS)
 
 clean:
-	rm -f client server client.o server.o 
+	rm -f client testserver client.o testserver.o 

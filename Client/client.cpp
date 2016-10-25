@@ -1,12 +1,4 @@
-//#include <stdio.h>
-//#include <iostream>
-//#include <stdlib.h>
-//#include <unistd.h>
-//#include <string.h>
-//#include <sys/types.h>
-//#include <sys/socket.h>
-//#include <netinet/in.h>
-//#include <netdb.h>
+//my IP: 192.168.0.21
 
 #include <iostream>
 #include <stdlib.h>

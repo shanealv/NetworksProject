@@ -1,5 +1,3 @@
-/* A simple server in the internet domain using TCP
-   The port number is passed as an argument */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +9,7 @@
 #include <netdb.h>
 
 #define PORTNUM 8081
+#define BUFSIZE 2048
 
 void error(const char *msg)
 {
@@ -26,7 +25,7 @@ int main(int argc, char *argv[])
 	int recvlen;			/* # bytes received */
 	int fd;				/* our socket */
 	int msgcnt = 0;			/* count # of messages we received */
-	unsigned char buf[BUFSIZE];	/* receive buffer */
+	char buf[BUFSIZE];	/* receive buffer */
 
 
 	/* create a UDP socket */
