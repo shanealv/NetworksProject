@@ -10,6 +10,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+using namespace std;
+
 int TotalPackets;
 int WindowSize;
 int SockFD, PortNum, N;
