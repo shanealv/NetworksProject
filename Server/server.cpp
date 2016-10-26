@@ -11,7 +11,6 @@
 #include "../Shared/FileService.h"
 
 #define PORTNUM 8081
-#define BUFSIZE 2048
 
 void error(const char *msg)
 {
@@ -27,14 +26,14 @@ int main(int argc, char *argv[])
 	int recvlen;			/* # bytes received */
 	int fd;				/* our socket */
 	int msgcnt = 0;			/* count # of messages we received */
-	char buf[BUFSIZE];	/* receive buffer */
 	ClientPacket *rcvBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
 	ServerPacket *sendBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
 	ServerPacket newSend;
 
 
 	/* create a UDP socket */
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+	{
 		perror("cannot create socket\n");
 		return 0;
 	}
@@ -52,21 +51,22 @@ int main(int argc, char *argv[])
 	}
 
 	/* now loop, receiving data and printing what we received */
-	for (;;) {
+	while(1)
+	{
 		printf("waiting on port %d\n", PORTNUM);
-		recvlen = recvfrom(fd, rcvBuff, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
-		if (recvlen > 0) {
-			//buf[recvlen] = 0;
+		recvlen = recvfrom(fd, rcvBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, &addrlen);
+		if (recvlen > 0)
 			printf("received message: \"%d\" (%d bytes)\n", rcvBuff->PacketNum, recvlen);
-		}
 		else
 			printf("uh oh - something went wrong!\n");
-		sprintf(buf, "ack %d", msgcnt++);
-		printf("sending response \"%s\"\n", buf);
 		
 		//Create Server Packet
 		newSend.PacketNum = rcvBuff->PacketNum;
+		for(int i = 0; i < PAYLOAD_SIZE; i++)
+			newSend.Payload[i] = 4;
 		memcpy(sendBuff, &(newSend), sizeof(ServerPacket));
+		
+		printf("sending SeverPacket with chunk %d\n", sendBuff->PacketNum);
 		
 		if (sendto(fd, sendBuff, sizeof(ServerPacket), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
 			perror("sendto");

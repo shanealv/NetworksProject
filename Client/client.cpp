@@ -19,18 +19,7 @@ int main(int argc, char *argv[])
     server[0] = '\0';
 	strcat(server, argv[1]);
 	
-	
-	Request(7, 19);
-
-	return 0;
-}
-
-
-void Request(int packetNumFirst, int packetNumLast)
-{
 	/* create a socket */
-	ClientPacket cPacket;
-
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0))==-1)
 		cout << "socket created" << endl;
 
@@ -43,7 +32,7 @@ void Request(int packetNumFirst, int packetNumLast)
 	if(bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0)
 	{
 		perror("bind failed");
-		return;
+		return 1;
 	}       
 
 	/* now define remaddr, the address to whom we want to send messages */
@@ -57,9 +46,24 @@ void Request(int packetNumFirst, int packetNumLast)
 		fprintf(stderr, "inet_aton() failed\n");
 		exit(1);
 	}
+	
+	CurrentWindowBase = 7;
+	WindowSize = 12;
+	
+	Request(CurrentWindowBase, CurrentWindowBase + WindowSize);
+	Receive();
+	close(fd);
+
+	return 0;
+}
+
+
+void Request(int packetNumFirst, int packetNumLast)
+{
+	ClientPacket cPacket;
 
 	/* now let's send the messages */
-	for (int i=packetNumFirst; i <= packetNumLast; i++)
+	for(int i=packetNumFirst; i <= packetNumLast; i++)
 	{
 		cout << "Sending packet "<< i << " to " << server << " port " << portno << endl;
 		
@@ -72,16 +76,20 @@ void Request(int packetNumFirst, int packetNumLast)
 			perror("sendto");
 			exit(1);
 		}
-		/* now receive an acknowledgement from the server */
-		recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), 0, (struct sockaddr *)&remaddr, &slen);
+	}
+}
+
+void Receive()
+{
+	do
+	{
+		recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), MSG_DONTWAIT, (struct sockaddr *)&remaddr, &slen);
 		if (recvlen >= 0)
 		{
-				//buf[recvlen] = 0;	/* expect a printable string - terminate it */
-				cout << "received ack for: \""<< recvBuff->PacketNum <<"\"" << endl;
+			cout << "received ack for: \""<< recvBuff->PacketNum <<"\"" << endl;
+			cout << "\t payload size: " << recvlen << endl;
 		}
-	}
-	close(fd);
-
+	} while(recvlen > 0);
 }
 
 

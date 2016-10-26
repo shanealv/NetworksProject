@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <stdio.h>
 
+#define PAYLOAD_SIZE 1024
+
 struct ClientPacket
 {
 //	char *ServerAddr;
@@ -15,7 +17,7 @@ struct ClientPacket
 struct ServerPacket
 {
 	//char *ReturnAddr;
-	//char Payload[1024];
+	char Payload[PAYLOAD_SIZE];
 	int PacketNum;
 };
 
