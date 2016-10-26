@@ -61,11 +61,16 @@ int main(int argc, char *argv[])
 			printf("uh oh - something went wrong!\n");
 		
 		//Create Server Packet
-		newSend.PacketNum = rcvBuff->PacketNum;
-		for(int i = 0; i < PAYLOAD_SIZE; i++)
-			newSend.Payload[i] = 4;
-		memcpy(sendBuff, &(newSend), sizeof(ServerPacket));
+		if(rcvBuff->PacketNum == -1)
+			newSend.PacketNum = 8192;
+		else
+		{
+			newSend.PacketNum = rcvBuff->PacketNum;
+			for(int i = 0; i < PAYLOAD_SIZE; i++)
+				newSend.Payload[i] = 'c';
+		}
 		
+		memcpy(sendBuff, &(newSend), sizeof(ServerPacket));
 		printf("sending SeverPacket with chunk %d\n", sendBuff->PacketNum);
 		
 		if (sendto(fd, sendBuff, sizeof(ServerPacket), 0, (struct sockaddr *)&remaddr, addrlen) < 0)

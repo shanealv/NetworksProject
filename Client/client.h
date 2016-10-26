@@ -38,11 +38,10 @@ char *server;	/* change this to use a different server */
 ClientPacket *sendBuff;
 ServerPacket *recvBuff;
 
-int InitRequest();
+void InitRequest();
 void Request(int packetNumFirst, int packetNumLast);
 void Receive();
-void WriteToFile();
-void InitFile(int size);
+void DumpWindow();
 void InitSocket();
 
 #endif

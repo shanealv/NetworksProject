@@ -1,8 +1,7 @@
 //my IP: 192.168.0.21
-// 172.24.102.8
+//school IP: 172.24.102.8
 
 #include "client.h"
-//using namespace std;
 
 int main(int argc, char *argv[])
 {
@@ -27,12 +26,8 @@ int main(int argc, char *argv[])
 	//Create client's socket
 	InitSocket();
 	
-	//This will be in InitRequest
-	for(int i = 0; i < WindowSize; i++)
-	{
-		WindowManager[i].PacketNum = i;
-		WindowManager[i].LoadFull = 0;
-	}
+	//Make initial request
+	InitRequest();
 	
 	Request(CurrentWindowBase, CurrentWindowBase + WindowSize);
 	Receive();
@@ -41,6 +36,21 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+//Request the -1th chunk. ASSUMED: the size of the file is in ServerPacket.PacketNum
+void InitRequest()
+{
+	Request(-1,-1);
+	recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), MSG_WAITALL, (struct sockaddr *)&remaddr, &slen);
+	
+	cout << "Size of the file is " << recvBuff->PacketNum << endl;
+	//AllocateFile("test.txt",recvBuff->PacketNum);
+
+	for(int i = 0; i < WindowSize; i++)
+	{
+		WindowManager[i].PacketNum = i;
+		WindowManager[i].LoadFull = 0;
+	}
+}
 
 void Request(int packetNumFirst, int packetNumLast)
 {
@@ -49,7 +59,7 @@ void Request(int packetNumFirst, int packetNumLast)
 	/* now let's send the messages */
 	for(int i=packetNumFirst; i <= packetNumLast; i++)
 	{
-		cout << "Sending packet "<< i << " to " << server << " port " << portno << endl;
+		cout << "Requesting packet "<< i << " from " << server << ":" << portno << endl;
 		
 		requestPacket.PacketNum = i;
 		
@@ -83,8 +93,9 @@ void Receive()
 					memcpy(WindowManager[i].Payload, &(recvBuff->Payload), PAYLOAD_SIZE);
 					WindowManager[i].LoadFull = 1;
 					
-					cout << "received ack for: \""<< recvBuff->PacketNum <<"\"" << endl;
-					cout << "\t payload size: " << recvlen << endl;
+					cout << "received chunk "<< recvBuff->PacketNum
+						<< " w/ payload size " << recvlen - 4 << endl;
+					cout << "\t 100th index of payload: " << WindowManager[i].Payload[100] << endl;
 					break;
 				}
 			}
