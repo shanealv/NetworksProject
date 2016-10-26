@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 	//Initialize variables
 	CurrentWindowBase = 0;
 	WindowSize = 10;
+	TotalPackets = 103;
 	sendBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
 	recvBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
 	WindowManager = (WindowSectionWrapper *)malloc(WindowSize * sizeof(WindowSectionWrapper));
@@ -29,8 +30,21 @@ int main(int argc, char *argv[])
 	//Make initial request
 	InitRequest();
 	
-	Request(CurrentWindowBase, CurrentWindowBase + WindowSize);
-	Receive();
+	//Transfer the entire file
+	while(1)
+	{
+		Request(CurrentWindowBase, CurrentWindowBase + WindowSize);
+		Receive();
+		DumpWindow();
+		
+		if(TotalPackets == CurrentWindowBase + 1)
+		{
+			cout << "File transfer complete!" << endl;
+			close(fd);
+			break;
+		}
+	}
+	
 	close(fd);
 
 	return 0;
@@ -55,36 +69,47 @@ void InitRequest()
 void Request(int packetNumFirst, int packetNumLast)
 {
 	ClientPacket requestPacket;
+	
+	//Don't request packets beyond the total number of packets
+	if(packetNumLast > TotalPackets)
+		packetNumLast = TotalPackets;
 
 	/* now let's send the messages */
 	for(int i=packetNumFirst; i <= packetNumLast; i++)
 	{
-		cout << "Requesting packet "<< i << " from " << server << ":" << portno << endl;
-		
-		requestPacket.PacketNum = i;
-		
-		//sprintf(buf, "This is packet %d", i);
-		memcpy(sendBuff, &(requestPacket), sizeof(ClientPacket));
-		if (sendto(fd, sendBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, slen)==-1)
-		{
-			perror("sendto");
-			exit(1);
-		}
+		//Do not request duplicate packets
+		for(int j = 0; j < WindowSize; j++)
+			if( (WindowManager[j].PacketNum == i && !(WindowManager[j].LoadFull))
+				|| i == -1)
+			{
+	
+				cout << "Requesting packet "<< i << " from " << server << ":" << portno << endl;
+				
+				requestPacket.PacketNum = i;
+				
+				//sprintf(buf, "This is packet %d", i);
+				memcpy(sendBuff, &(requestPacket), sizeof(ClientPacket));
+				if (sendto(fd, sendBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, slen)==-1)
+				{
+					perror("sendto");
+					exit(1);
+				}
+				
+				break;
+			}
 	}
 }
 
 void Receive()
 {
 	//Request all data out of OS input buffer
-	int tempBase = CurrentWindowBase;
-	
 	do
 	{
 		recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), MSG_DONTWAIT, (struct sockaddr *)&remaddr, &slen);
 		if (recvlen >= 0)	//If a ServerPacket was recieved
 		{
 			//Add the data from the recieved ServerPacket into the WindowManager
-			for(int i = tempBase; i < tempBase + WindowSize; i++)
+			for(int i = 0; i < WindowSize; i++)
 			{
 				//Check to make sure the packet is in the current window or if
 				//the packet has already been recieved
@@ -102,6 +127,30 @@ void Receive()
 			
 		}
 	} while(recvlen > 0);
+}
+
+void DumpWindow()
+{
+	//Write all buffers in he window to the file, moving the window when neccessary
+	for(int i = 0; i < WindowSize; i++)
+	{
+		if(WindowManager[i].PacketNum == CurrentWindowBase)
+		{
+			//WriteFile("test.txt", x, y, WindowManager[i].Payload);
+			
+			cout << "Chunk #" << WindowManager[i].PacketNum << " written to file" << endl;
+			
+			if(TotalPackets == CurrentWindowBase + 1)
+			{
+				cout << "done" << endl;
+				return;
+			}
+			
+			WindowManager[i].PacketNum = CurrentWindowBase + WindowSize;
+			WindowManager[i].LoadFull = 0;
+			CurrentWindowBase++;
+		}
+	}
 }
 
 void InitSocket()
@@ -134,4 +183,3 @@ void InitSocket()
 		exit(1);
 	}
 }
-

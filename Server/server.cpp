@@ -10,7 +10,7 @@
 #include "../Shared/Packets.h"
 #include "../Shared/FileService.h"
 
-#define PORTNUM 8081
+#define PORTNUM 8082
 
 void error(const char *msg)
 {

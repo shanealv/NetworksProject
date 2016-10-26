@@ -20,7 +20,7 @@ struct WindowSectionWrapper
 {
 	int PacketNum;
 	char Payload[PAYLOAD_SIZE];
-	int LoadFull;	//boolean
+	int LoadFull;		//boolean: if buffer has useful information
 };
 
 int TotalPackets;
