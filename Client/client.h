@@ -16,9 +16,19 @@
 
 using namespace std;
 
+struct WindowSectionWrapper
+{
+	int PacketNum;
+	char Payload[PAYLOAD_SIZE];
+	int LoadFull;	//boolean
+};
+
 int TotalPackets;
 int WindowSize;
 int CurrentWindowBase;
+WindowSectionWrapper *WindowManager;
+
+
 struct sockaddr_in myaddr, remaddr;
 int fd, portno;
 socklen_t slen = sizeof(remaddr);
@@ -33,5 +43,6 @@ void Request(int packetNumFirst, int packetNumLast);
 void Receive();
 void WriteToFile();
 void InitFile(int size);
+void InitSocket();
 
 #endif

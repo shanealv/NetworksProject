@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 		printf("waiting on port %d\n", PORTNUM);
 		recvlen = recvfrom(fd, rcvBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, &addrlen);
 		if (recvlen > 0)
-			printf("received message: \"%d\" (%d bytes)\n", rcvBuff->PacketNum, recvlen);
+			printf("received request for packet %d\n", rcvBuff->PacketNum);
 		else
 			printf("uh oh - something went wrong!\n");
 		

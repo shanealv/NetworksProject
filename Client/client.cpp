@@ -12,13 +12,89 @@ int main(int argc, char *argv[])
        exit(0);
     }
 	
+	//Initialize variables
+	CurrentWindowBase = 0;
+	WindowSize = 10;
 	sendBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
 	recvBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
+	WindowManager = (WindowSectionWrapper *)malloc(WindowSize * sizeof(WindowSectionWrapper));
+	
 	portno = atoi(argv[2]);
 	server = (char *)malloc(strlen(argv[1]));
     server[0] = '\0';
 	strcat(server, argv[1]);
 	
+	//Create client's socket
+	InitSocket();
+	
+	//This will be in InitRequest
+	for(int i = 0; i < WindowSize; i++)
+	{
+		WindowManager[i].PacketNum = i;
+		WindowManager[i].LoadFull = 0;
+	}
+	
+	Request(CurrentWindowBase, CurrentWindowBase + WindowSize);
+	Receive();
+	close(fd);
+
+	return 0;
+}
+
+
+void Request(int packetNumFirst, int packetNumLast)
+{
+	ClientPacket requestPacket;
+
+	/* now let's send the messages */
+	for(int i=packetNumFirst; i <= packetNumLast; i++)
+	{
+		cout << "Sending packet "<< i << " to " << server << " port " << portno << endl;
+		
+		requestPacket.PacketNum = i;
+		
+		//sprintf(buf, "This is packet %d", i);
+		memcpy(sendBuff, &(requestPacket), sizeof(ClientPacket));
+		if (sendto(fd, sendBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, slen)==-1)
+		{
+			perror("sendto");
+			exit(1);
+		}
+	}
+}
+
+void Receive()
+{
+	//Request all data out of OS input buffer
+	int tempBase = CurrentWindowBase;
+	
+	do
+	{
+		recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), MSG_DONTWAIT, (struct sockaddr *)&remaddr, &slen);
+		if (recvlen >= 0)	//If a ServerPacket was recieved
+		{
+			//Add the data from the recieved ServerPacket into the WindowManager
+			for(int i = tempBase; i < tempBase + WindowSize; i++)
+			{
+				//Check to make sure the packet is in the current window or if
+				//the packet has already been recieved
+				if(WindowManager[i].PacketNum == recvBuff->PacketNum && !(WindowManager[i].LoadFull))
+				{
+					memcpy(WindowManager[i].Payload, &(recvBuff->Payload), PAYLOAD_SIZE);
+					WindowManager[i].LoadFull = 1;
+					
+					cout << "received ack for: \""<< recvBuff->PacketNum <<"\"" << endl;
+					cout << "\t payload size: " << recvlen << endl;
+					break;
+				}
+			}
+			
+		}
+	} while(recvlen > 0);
+}
+
+void InitSocket()
+{
 	/* create a socket */
 	if ((fd=socket(AF_INET, SOCK_DGRAM, 0))==-1)
 		cout << "socket created" << endl;
@@ -32,7 +108,7 @@ int main(int argc, char *argv[])
 	if(bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0)
 	{
 		perror("bind failed");
-		return 1;
+		exit(1);
 	}       
 
 	/* now define remaddr, the address to whom we want to send messages */
@@ -46,50 +122,5 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "inet_aton() failed\n");
 		exit(1);
 	}
-	
-	CurrentWindowBase = 7;
-	WindowSize = 12;
-	
-	Request(CurrentWindowBase, CurrentWindowBase + WindowSize);
-	Receive();
-	close(fd);
-
-	return 0;
 }
-
-
-void Request(int packetNumFirst, int packetNumLast)
-{
-	ClientPacket cPacket;
-
-	/* now let's send the messages */
-	for(int i=packetNumFirst; i <= packetNumLast; i++)
-	{
-		cout << "Sending packet "<< i << " to " << server << " port " << portno << endl;
-		
-		cPacket.PacketNum = i;
-		
-		//sprintf(buf, "This is packet %d", i);
-		memcpy(sendBuff, &(cPacket), sizeof(ClientPacket));
-		if (sendto(fd, sendBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, slen)==-1)
-		{
-			perror("sendto");
-			exit(1);
-		}
-	}
-}
-
-void Receive()
-{
-	do
-	{
-		recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), MSG_DONTWAIT, (struct sockaddr *)&remaddr, &slen);
-		if (recvlen >= 0)
-		{
-			cout << "received ack for: \""<< recvBuff->PacketNum <<"\"" << endl;
-			cout << "\t payload size: " << recvlen << endl;
-		}
-	} while(recvlen > 0);
-}
-
 
