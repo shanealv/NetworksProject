@@ -27,6 +27,7 @@ int TotalPackets;
 int WindowSize;
 int CurrentWindowBase;
 WindowSectionWrapper *WindowManager;
+int FileSize;
 
 
 struct sockaddr_in myaddr, remaddr;

@@ -56,8 +56,9 @@ void InitRequest()
 	Request(-1,-1);
 	recvlen = recvfrom(fd, recvBuff, sizeof(ServerPacket), MSG_WAITALL, (struct sockaddr *)&remaddr, &slen);
 	
-	cout << "Size of the file is " << recvBuff->PacketNum << endl;
-	//AllocateFile("test.txt",recvBuff->PacketNum);
+	FileSize = recvBuff->PacketNum;
+	cout << "Size of the file is " << FileSize << endl;
+	AllocateFile("test.txt",recvBuff->PacketNum);
 
 	for(int i = 0; i < WindowSize; i++)
 	{
@@ -134,9 +135,9 @@ void DumpWindow()
 	//Write all buffers in he window to the file, moving the window when neccessary
 	for(int i = 0; i < WindowSize; i++)
 	{
-		if(WindowManager[i].PacketNum == CurrentWindowBase)
+		if(WindowManager[i].PacketNum == CurrentWindowBase && WindowManager[i].LoadFull)
 		{
-			//WriteFile("test.txt", x, y, WindowManager[i].Payload);
+			SaveChunk("test.txt", WindowManager[i].PacketNum, FileSize, WindowManager[i].Payload);
 			
 			cout << "Chunk #" << WindowManager[i].PacketNum << " written to file" << endl;
 			
