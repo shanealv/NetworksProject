@@ -7,16 +7,20 @@
 
 struct ClientPacket
 {
-	struct sockaddr *ServerAddr;
-	struct sockaddr *ReturnAddr;
+//	char *ServerAddr;
+//	char *ReturnAddr;
 	int PacketNum;
 };
 
 struct ServerPacket
 {
-	struct sockaddr *ReturnAddr;
-	const  unsigned char Payload[1024];
+	//char *ReturnAddr;
+	//char Payload[1024];
 	int PacketNum;
 };
 
 #endif
+
+//Printing readable IP from struct sockaddr_in
+//	char *ip = inet_ntoa(myaddr.sin_addr);
+//	cout << ip << endl;

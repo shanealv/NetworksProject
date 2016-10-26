@@ -7,6 +7,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "../Shared/Packets.h"
+#include "../Shared/FileService.h"
 
 #define PORTNUM 8081
 #define BUFSIZE 2048
@@ -26,6 +28,9 @@ int main(int argc, char *argv[])
 	int fd;				/* our socket */
 	int msgcnt = 0;			/* count # of messages we received */
 	char buf[BUFSIZE];	/* receive buffer */
+	ClientPacket *rcvBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
+	ServerPacket *sendBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
+	ServerPacket newSend;
 
 
 	/* create a UDP socket */
@@ -49,16 +54,21 @@ int main(int argc, char *argv[])
 	/* now loop, receiving data and printing what we received */
 	for (;;) {
 		printf("waiting on port %d\n", PORTNUM);
-		recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
+		recvlen = recvfrom(fd, rcvBuff, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen);
 		if (recvlen > 0) {
-			buf[recvlen] = 0;
-			printf("received message: \"%s\" (%d bytes)\n", buf, recvlen);
+			//buf[recvlen] = 0;
+			printf("received message: \"%d\" (%d bytes)\n", rcvBuff->PacketNum, recvlen);
 		}
 		else
 			printf("uh oh - something went wrong!\n");
 		sprintf(buf, "ack %d", msgcnt++);
 		printf("sending response \"%s\"\n", buf);
-		if (sendto(fd, buf, strlen(buf), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
+		
+		//Create Server Packet
+		newSend.PacketNum = rcvBuff->PacketNum;
+		memcpy(sendBuff, &(newSend), sizeof(ServerPacket));
+		
+		if (sendto(fd, sendBuff, sizeof(ServerPacket), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
 			perror("sendto");
 	}
 	/* never exits */
