@@ -36,26 +36,24 @@ long GetNumChunks(long fileSize)
 	return numChunks;
 }
 
-char* ReadFile(const char * filename, int start, int end)
+void ReadFile(const char * filename, int start, int end, char buffer[])
 {
-	char * buffer = new char[BUFFER_SIZE];
 	long diff = end - start;
 	if (diff > BUFFER_SIZE)
 	{
 		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << end << endl;
-		return NULL;
+		return;
 	}
 	ifstream inf(filename, ios::in | ios::binary);
 	if (!inf)
 	{
 		cerr << "Could not open " << filename << endl;
-		return NULL;
+		return;
 	}
 
 	inf.seekg(start, ios::beg);
 	inf.read(buffer, diff);
 	inf.close();
-	return buffer;
 }
 
 void WriteFile(const char * filename, int start, int end, char buffer[])
@@ -76,7 +74,7 @@ void WriteFile(const char * filename, int start, int end, char buffer[])
 	outf.close();
 }
 
-char* CopyChunk(const char * filename, int chunkNumber, long fileSize)
+void CopyChunk(const char * filename, int chunkNumber, long fileSize, char buffer[])
 {
 	int start = chunkNumber * BUFFER_SIZE;
 	int end = start + BUFFER_SIZE;
@@ -84,7 +82,7 @@ char* CopyChunk(const char * filename, int chunkNumber, long fileSize)
 	{
 		end = fileSize;
 	}
-	return ReadFile(filename, start, end);
+	ReadFile(filename, start, end, buffer);
 }
 
 void SaveChunk(const char * filename, int chunkNumber, long fileSize, char buffer[])

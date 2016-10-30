@@ -7,8 +7,8 @@ int main(int argc, char *argv[])
 {
     if (argc < 3)
 	{
-       cout << "usage %s: [hostname, port]\n" << argv[0] << endl;
-       exit(0);
+		cout << "usage %s: [hostname, port]\n" << argv[0] << endl;
+		exit(0);
     }
 	
 	//Initialize variables
