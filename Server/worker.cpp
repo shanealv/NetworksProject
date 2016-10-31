@@ -148,9 +148,9 @@ void * WaitForRequests (void * arg)
 				pthread_mutex_lock(&file_lock);
 				int offset = (long) request.PacketNum * BUFFER_SIZE;
 				if (offset > file_size) continue;
-				int size = (offset + size > file_size) ? file_size - offset : BUFFER_SIZE;
+				int size = (offset + size >= file_size) ? file_size - offset: BUFFER_SIZE;
 #ifdef DEBUG
-		cout << "[Reading] " << request.PacketNum << endl;
+		cout << "[Reading] " << request.PacketNum  << " offset + size " << offset + size << endl;
 #endif
 				pread(file_fd, packet.Payload, size, offset);
 				//CopyChunk(file_name, request.PacketNum, file_size, packet.Payload);
