@@ -9,6 +9,7 @@
 #include "../Shared/Packets.h"
 #include "../Shared/FileService.h"
 #include "worker.h"
+#include <time.h>
 
 using namespace std;
 
@@ -38,9 +39,6 @@ PacketRequest::PacketRequest(const PacketRequest& other)
 {
 	if (this != &other)
 	{
-#ifdef DEBUG
-		cout << "COPY CTOR " << other.PacketNum << endl;
-#endif 
 		PacketNum = other.PacketNum;
 		memcpy(&RequestAddress, &other.RequestAddress, sizeof(sockaddr_in));
 	}
@@ -61,6 +59,9 @@ PacketRequest& PacketRequest::operator=(const PacketRequest& other)
 
 bool InitThreads(int numThreads, const char * filename, int fd)
 {
+#ifdef DEBUG
+	srand(time(NULL));
+#endif 
 #ifdef DEBUG
 	cout << "Initializing " << numThreads << " threads using the file: " << filename << endl;
 #endif 
@@ -141,22 +142,14 @@ void * WaitForRequests (void * arg)
 			{
 				packet.PacketNum = (int) file_size;
 				SendPacket(&packet, request.RequestAddress);
+				continue;
 			}
-			else
-			{	
-				packet.PacketNum = request.PacketNum;
-				pthread_mutex_lock(&file_lock);
-				int offset = (long) request.PacketNum * BUFFER_SIZE;
-				if (offset > file_size) continue;
-				int size = (offset + size >= file_size) ? file_size - offset: BUFFER_SIZE;
-#ifdef DEBUG
-		cout << "[Reading] " << request.PacketNum  << " offset + size " << offset + size << endl;
-#endif
-				pread(file_fd, packet.Payload, size, offset);
-				//CopyChunk(file_name, request.PacketNum, file_size, packet.Payload);
-				pthread_mutex_unlock(&file_lock);
-				SendPacket(&packet, request.RequestAddress);
-			}
+			
+			packet.PacketNum = request.PacketNum;
+			pthread_mutex_lock(&file_lock);
+			CopyChunk(file_fd, request.PacketNum, file_size, packet.Payload);
+			pthread_mutex_unlock(&file_lock);
+			SendPacket(&packet, request.RequestAddress);
 		}
 		usleep(500);
 	}
@@ -165,6 +158,19 @@ void * WaitForRequests (void * arg)
 void SendPacket (const ServerPacket * packet, sockaddr_in & addr)
 {
 	cout << "[Sent] Packet Number " << packet->PacketNum << endl;
+
+#ifdef DEBUG
+	int boo = rand() % 100;
+	if (boo < 25)
+	{
+		cout << "BOO!!!!" << endl;
+		cout << "BOO!!!!" << endl;
+		cout << "BOO!!!!" << endl;
+		cout << "BOO!!!!" << endl;
+		return;
+	}
+#endif
+
 	pthread_mutex_lock(&network_lock);
 	int result = sendto(socket_fd, packet, sizeof(ServerPacket), 0, (sockaddr *)&addr, sizeof(sockaddr_in));
 	pthread_mutex_unlock(&network_lock);

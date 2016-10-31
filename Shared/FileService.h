@@ -7,10 +7,9 @@ std::streamsize filesize(const char* filename);
 void AllocateFile(const char* filename, long size);
 long GetNumChunks(long fileSize);
 
-void ReadFile(const char * filename, int start, int stop, char buffer[]);
 void WriteFile(const char * filename, int start, int stop, char buffer[]);
 
-void CopyChunk(const char * filename, int chunkNumber, long fileSize, char buffer[]);
+bool CopyChunk(int fd, int chunkNumber, long fileSize, char buffer[]);
 void SaveChunk(const char * filename, int chunkNumber, long fileSize, char buffer[]);
 
 #endif // !FileService_h

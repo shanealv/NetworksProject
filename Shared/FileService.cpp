@@ -2,6 +2,10 @@
 #include <fstream>
 #include <limits>
 #include <ios>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <fcntl.h>
 #include "FileService.h"
 
 using namespace std;
@@ -33,27 +37,7 @@ long GetNumChunks(long fileSize)
 	{
 		numChunks++;
 	}
-	return numChunks;
-}
-
-void ReadFile(const char * filename, int start, int end, char buffer[])
-{
-	long diff = end - start;
-	if (diff > BUFFER_SIZE)
-	{
-		cerr << "Buffer isn't large enough to make read from bytes " << start << " to " << end << endl;
-		return;
-	}
-	ifstream inf(filename, ios::in | ios::binary);
-	if (!inf)
-	{
-		cerr << "Could not open " << filename << endl;
-		return;
-	}
-
-	inf.seekg(start, ios::beg);
-	inf.read(buffer, diff);
-	inf.close();
+	return numChunks - 1;
 }
 
 void WriteFile(const char * filename, int start, int end, char buffer[])
@@ -74,15 +58,20 @@ void WriteFile(const char * filename, int start, int end, char buffer[])
 	outf.close();
 }
 
-void CopyChunk(const char * filename, int chunkNumber, long fileSize, char buffer[])
+bool CopyChunk(int fd, int chunkNumber, long fileSize, char buffer[])
 {
-	int start = chunkNumber * BUFFER_SIZE;
-	int end = start + BUFFER_SIZE;
-	if (end > fileSize)
-	{
-		end = fileSize;
-	}
-	ReadFile(filename, start, end, buffer);
+	
+	int offset = (long) chunkNumber * BUFFER_SIZE;
+	if (offset > fileSize) 
+		return false;
+	int size = (offset + size >= fileSize) ? fileSize - offset: BUFFER_SIZE;
+
+#ifdef DEBUG
+	cout << "[Reading] address " << offset << " to " << offset + size << endl;
+#endif
+
+	pread(fd, buffer, size, offset);
+	return true;
 }
 
 void SaveChunk(const char * filename, int chunkNumber, long fileSize, char buffer[])

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 		Receive();
 		DumpWindow();
 		
-		if(TotalPackets <= CurrentWindowBase + 1)
+		if(TotalPackets < CurrentWindowBase + 1)
 		{
 			cout << "File transfer complete!" << endl;
 			close(FileDescriptor);
@@ -54,16 +54,22 @@ int main(int argc, char *argv[])
 }
 
 //Request the -1th chunk. ASSUMED: the size of the file is in ServerPacket.PacketNum
+//MSG_WAITALL
 void InitRequest()
 {
-	Request(-1,-1);
-	RecvLength = recvfrom(FileDescriptor, RecvBuffer, sizeof(ServerPacket), MSG_WAITALL, (struct sockaddr *)&ServerAddr, &ServerSize);
+	RecvLength = 0;
+	while(RecvLength <= 0)
+	{
+		Request(-1,-1);
+		usleep(300000);
+		RecvLength = recvfrom(FileDescriptor, RecvBuffer, sizeof(ServerPacket), MSG_DONTWAIT, (struct sockaddr *)&ServerAddr, &ServerSize);
+	}
 	
 	FileSize = RecvBuffer->PacketNum;
 	cout << "Size of the file is " << FileSize << endl;
 	AllocateFile(FileName,RecvBuffer->PacketNum);
 	
-	TotalPackets = (int)GetNumChunks(FileSize) - 1;
+	TotalPackets = (int)GetNumChunks(FileSize);
 
 	for(int i = 0; i < WINDOW_SIZE; i++)
 	{
