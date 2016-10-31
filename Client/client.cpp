@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	//Initialize variables
 	CurrentWindowBase = 0;
 	WindowSize = 10;
-	TotalPackets = 103;
+	TotalPackets = 363;
 	sendBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
 	recvBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
 	WindowManager = (WindowSectionWrapper *)malloc(WindowSize * sizeof(WindowSectionWrapper));
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 		Receive();
 		DumpWindow();
 		
-		if(TotalPackets == CurrentWindowBase + 1)
+		if(TotalPackets <= CurrentWindowBase + 1)
 		{
 			cout << "File transfer complete!" << endl;
 			close(fd);
@@ -58,7 +58,7 @@ void InitRequest()
 	
 	FileSize = recvBuff->PacketNum;
 	cout << "Size of the file is " << FileSize << endl;
-	AllocateFile("test.txt",recvBuff->PacketNum);
+	AllocateFile("img.gif",recvBuff->PacketNum);
 
 	for(int i = 0; i < WindowSize; i++)
 	{
@@ -83,7 +83,7 @@ void Request(int packetNumFirst, int packetNumLast)
 			if( (WindowManager[j].PacketNum == i && !(WindowManager[j].LoadFull))
 				|| i == -1)
 			{
-	
+				usleep(200000);
 				cout << "Requesting packet "<< i << " from " << server << ":" << portno << endl;
 				
 				requestPacket.PacketNum = i;
@@ -99,6 +99,7 @@ void Request(int packetNumFirst, int packetNumLast)
 				break;
 			}
 	}
+	
 }
 
 void Receive()

@@ -7,10 +7,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <iostream>
 #include "../Shared/Packets.h"
 #include "../Shared/FileService.h"
+#include "worker.h"
 
 #define PORTNUM 8082
+
+using namespace std;
 
 void error(const char *msg)
 {
@@ -49,32 +53,31 @@ int main(int argc, char *argv[])
 		perror("bind failed");
 		return 0;
 	}
-
-	/* now loop, receiving data and printing what we received */
-	while(1)
+	
+	bool success = InitThreads (4, "skeleton.gif", fd);
+	if (!success)
 	{
-		printf("waiting on port %d\n", PORTNUM);
+		cout << "failed to intialize server workers" << endl;
+		return 0;
+	}
+	
+	/* now loop, receiving data and printing what we received */
+	while(true)
+	{
+		cout << "Waiting on port " << PORTNUM << "..." << endl;
 		recvlen = recvfrom(fd, rcvBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, &addrlen);
 		if (recvlen > 0)
-			printf("received request for packet %d\n", rcvBuff->PacketNum);
-		else
-			printf("uh oh - something went wrong!\n");
-		
-		//Create Server Packet
-		if(rcvBuff->PacketNum == -1)
-			newSend.PacketNum = 8192;
+			cout << "Received request for packet " << rcvBuff->PacketNum << endl;
 		else
 		{
-			newSend.PacketNum = rcvBuff->PacketNum;
-			for(int i = 0; i < PAYLOAD_SIZE; i++)
-				newSend.Payload[i] = 'c';
+			cerr << "Uh oh - something went wrong!" << endl;
+			continue;
 		}
 		
-		memcpy(sendBuff, &(newSend), sizeof(ServerPacket));
-		printf("sending SeverPacket with chunk %d\n", sendBuff->PacketNum);
+		PacketRequest request(rcvBuff->PacketNum, remaddr);
 		
-		if (sendto(fd, sendBuff, sizeof(ServerPacket), 0, (struct sockaddr *)&remaddr, addrlen) < 0)
-			perror("sendto");
+		QueueRequest(request);
+		usleep(5000); // give time for the other threads to work
 	}
 	/* never exits */
 }
