@@ -152,7 +152,7 @@ void DumpWindow()
 			
 			cout << "Chunk #" << WindowManager[i].PacketNum << " written to file" << endl;
 			
-			if(TotalPackets == CurrentWindowBase + 1)
+			if(TotalPackets < CurrentWindowBase + 1)
 			{
 				cout << "done" << endl;
 				return;
