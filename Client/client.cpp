@@ -60,7 +60,7 @@ void InitRequest()
 	cout << "Size of the file is " << FileSize << endl;
 	AllocateFile("img.gif",recvBuff->PacketNum);
 	
-	TotalPackets = (int)GetNumChunks(FileSize);
+	TotalPackets = (int)GetNumChunks(FileSize) - 1;
 
 	for(int i = 0; i < WindowSize; i++)
 	{
