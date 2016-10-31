@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	//Make initial request
 	InitRequest();
 	
-	//Transfer the entire file
+	//Receive file
 	while(1)
 	{
 		Request(CurrentWindowBase, CurrentWindowBase + WINDOW_SIZE);
@@ -125,9 +125,8 @@ void Receive()
 					memcpy(WindowManager[i].Payload, &(RecvBuffer->Payload), PAYLOAD_SIZE);
 					WindowManager[i].LoadFull = 1;
 					
-					cout << "received chunk "<< RecvBuffer->PacketNum
+					cout << "received packet "<< RecvBuffer->PacketNum
 						<< " w/ payload size " << RecvLength - 4 << endl;
-					cout << "\t 100th index of payload: " << WindowManager[i].Payload[100] << endl;
 					break;
 				}
 			}
@@ -143,7 +142,7 @@ void DumpWindow()
 	{
 		if(WindowManager[i].PacketNum == CurrentWindowBase && WindowManager[i].LoadFull)
 		{
-			SaveChunk("img.gif", WindowManager[i].PacketNum, FileSize, WindowManager[i].Payload);
+			SaveChunk(FileName, WindowManager[i].PacketNum, FileSize, WindowManager[i].Payload);
 			
 			cout << "Chunk #" << WindowManager[i].PacketNum << " written to file" << endl;
 			
