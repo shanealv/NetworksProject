@@ -83,13 +83,10 @@ void Request(int packetNumFirst, int packetNumLast)
 			if( (WindowManager[j].PacketNum == i && !(WindowManager[j].LoadFull))
 				|| i == -1)
 			{
-				usleep(30000);
 				cout << "Requesting packet "<< i << " from " << server << ":" << portno << endl;
 				
 				requestPacket.PacketNum = i;
-#ifdef DEBUG
 				
-#endif
 				//sprintf(buf, "This is packet %d", i);
 				memcpy(sendBuff, &(requestPacket), sizeof(ClientPacket));
 				if (sendto(fd, sendBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, slen)==-1)
@@ -100,6 +97,8 @@ void Request(int packetNumFirst, int packetNumLast)
 				
 				break;
 			}
+		
+		usleep(3000);
 	}
 	
 }
