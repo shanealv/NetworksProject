@@ -14,6 +14,8 @@
 #include "../Shared/Packets.h"
 #include "../Shared/FileService.h"
 
+#define WINDOW_SIZE 25
+
 using namespace std;
 
 struct WindowSectionWrapper
@@ -24,21 +26,20 @@ struct WindowSectionWrapper
 };
 
 int TotalPackets;
-int WindowSize;
 int CurrentWindowBase;
 WindowSectionWrapper *WindowManager;
 int FileSize;
 char *FileName;
 
 
-struct sockaddr_in myaddr, remaddr;
-int fd, portno;
-socklen_t slen = sizeof(remaddr);
-int recvlen;		/* # bytes in acknowledgement message */
-char *server;	/* change this to use a different server */
+struct sockaddr_in ClientAddr, ServerAddr;
+int FileDescriptor, PortNum;
+socklen_t ServerSize = sizeof(ServerAddr);
+int RecvLength;		/* # bytes in acknowledgement message */
+char *Server;	/* change this to use a different server */
 
-ClientPacket *sendBuff;
-ServerPacket *recvBuff;
+ClientPacket *SendBuffer;
+ServerPacket *RecvBuffer;
 
 void InitRequest();
 void Request(int packetNumFirst, int packetNumLast);
