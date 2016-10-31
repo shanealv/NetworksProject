@@ -28,6 +28,7 @@ int WindowSize;
 int CurrentWindowBase;
 WindowSectionWrapper *WindowManager;
 int FileSize;
+char *FileName;
 
 
 struct sockaddr_in myaddr, remaddr;

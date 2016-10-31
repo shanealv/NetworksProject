@@ -5,9 +5,9 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc < 3)
+    if (argc != 4)
 	{
-		cout << "usage %s: [hostname, port]\n" << argv[0] << endl;
+		cout << "usage %s: [hostname, port, file name (no spaces)]\n" << argv[0] << endl;
 		exit(0);
     }
 	
@@ -19,10 +19,15 @@ int main(int argc, char *argv[])
 	recvBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
 	WindowManager = (WindowSectionWrapper *)malloc(WindowSize * sizeof(WindowSectionWrapper));
 	
+	
 	portno = atoi(argv[2]);
 	server = (char *)malloc(strlen(argv[1]));
     server[0] = '\0';
 	strcat(server, argv[1]);
+	
+	FileName = (char *)malloc(strlen(argv[3]));
+    FileName[0] = '\0';
+	strcat(FileName, argv[3]);
 	
 	//Create client's socket
 	InitSocket();
@@ -58,7 +63,7 @@ void InitRequest()
 	
 	FileSize = recvBuff->PacketNum;
 	cout << "Size of the file is " << FileSize << endl;
-	AllocateFile("img.gif",recvBuff->PacketNum);
+	AllocateFile(FileName,recvBuff->PacketNum);
 	
 	TotalPackets = (int)GetNumChunks(FileSize) - 1;
 
