@@ -12,15 +12,21 @@
 #include "../Shared/FileService.h"
 #include "worker.h"
 
-#define PORTNUM 8082
-
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+	if (argc != 3)
+	{
+		cout << "usage %s: [file name, port]\n" << argv[0] << endl;
+		exit(0);
+	}
+	
+
 	sockaddr_in myaddr;	/* our address */
 	socklen_t addrlen = sizeof(sockaddr_in);		/* length of addresses */
 	int fd;					/* our socket */
+	int port = atoi(argv[2]);
 
 	/* create a UDP socket */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -33,7 +39,7 @@ int main(int argc, char *argv[])
 	memset((char *)&myaddr, 0, sizeof(myaddr));
 	myaddr.sin_family = AF_INET;
 	myaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	myaddr.sin_port = htons(PORTNUM);
+	myaddr.sin_port = htons(port);
 
 	if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0)
 	{
@@ -41,7 +47,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	
-	bool success = InitThreads (4, "skeleton.gif", fd);
+	bool success = InitThreads (4, argv[1], fd);
 	if (!success)
 	{
 		cout << "failed to intialize server workers" << endl;
@@ -51,7 +57,7 @@ int main(int argc, char *argv[])
 	/* now loop, receiving data and printing what we received */
 	while(true)
 	{
-		cout << "Waiting on port " << PORTNUM << "..." << endl;
+		cout << "Waiting on port " << port << "..." << endl;
 		
 		ClientPacket data;
 		PacketRequest request;

@@ -18,6 +18,8 @@ int file_fd;
 long file_size;
 long file_blocks;
 pthread_t * workers;
+
+// mutex locks
 pthread_mutex_t file_lock;
 pthread_mutex_t queue_lock;
 pthread_mutex_t network_lock;
@@ -29,12 +31,14 @@ PacketRequest::PacketRequest()
 	PacketNum = -1;
 }
 
+// Constructor
 PacketRequest::PacketRequest(int packetNum, sockaddr_in requestAddress)
 {
 	PacketNum = packetNum;
 	memcpy(&RequestAddress, &requestAddress, sizeof(sockaddr_in));
 }
 
+// Copy Constructor
 PacketRequest::PacketRequest(const PacketRequest& other)
 {
 	if (this != &other)
@@ -44,19 +48,18 @@ PacketRequest::PacketRequest(const PacketRequest& other)
 	}
 }
 
+// Copy Assignment
 PacketRequest& PacketRequest::operator=(const PacketRequest& other)
 {
 	if (this != &other)
 	{
-#ifdef DEBUG
-		cout << "COPY ASSIGN " << other.PacketNum << endl;
-#endif 
 		PacketNum = other.PacketNum;
 		memcpy(&RequestAddress, &other.RequestAddress, sizeof(sockaddr_in));
 	}
 	return *this;
 }
 
+// Creates worker threads and opens file
 bool InitThreads(int numThreads, const char * filename, int fd)
 {
 #ifdef DEBUG
@@ -74,8 +77,8 @@ bool InitThreads(int numThreads, const char * filename, int fd)
 	
 	workers = new pthread_t[numThreads];
 	if (pthread_mutex_init(&file_lock, NULL)    != 0 ||
-		pthread_mutex_init(&queue_lock, NULL)   != 0 ||
-		pthread_mutex_init(&network_lock, NULL) != 0)
+	    pthread_mutex_init(&queue_lock, NULL)   != 0 ||
+	    pthread_mutex_init(&network_lock, NULL) != 0)
 	{
 		cerr << "Error: Mutex intialization failed" << endl;
 		return false;
@@ -83,9 +86,10 @@ bool InitThreads(int numThreads, const char * filename, int fd)
 	
 	file_fd = open(filename, O_RDONLY, 0);
 	file_size = (long) filesize(filename);
-	file_blocks = GetNumChunks(file_size);
+	file_blocks = GetNumChunks(file_size); // unused
 	cout << "Using file: " << filename << "   Size: " << file_size << " bytes   Chunks: " << file_blocks << endl;
 	
+	// create threads
 	for (int i = 0; i < numThreads; i++)
 	{
 		int returnCode = pthread_create(workers + (i-1), NULL, WaitForRequests, NULL);
@@ -98,6 +102,7 @@ bool InitThreads(int numThreads, const char * filename, int fd)
 	return true;
 }
 
+// Add a request to the queue
 void QueueRequest(PacketRequest request)
 {
 	pthread_mutex_lock(&queue_lock);
@@ -108,6 +113,7 @@ void QueueRequest(PacketRequest request)
 	pthread_mutex_unlock(&queue_lock);
 }
 
+// Pop a request from the queue and copy it to the parameter variable
 bool DequeueRequest(PacketRequest & request)
 {
 	bool success = false;
@@ -128,7 +134,7 @@ bool DequeueRequest(PacketRequest & request)
 	return success;
 }
 
-
+// Thread Function, watches queue for requests to process
 void * WaitForRequests (void * arg)
 {
 	PacketRequest request;
@@ -155,10 +161,12 @@ void * WaitForRequests (void * arg)
 	}
 }
 
+// Send the packet using the socket given in the Init funcition
 void SendPacket (const ServerPacket * packet, sockaddr_in & addr)
 {
 	cout << "[Sent] Packet Number " << packet->PacketNum << endl;
 
+// periodically "drop" packet when in debug mode
 #ifdef DEBUG
 	int boo = rand() % 100;
 	if (boo < 25)
