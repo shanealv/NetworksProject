@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	//Initialize variables
 	CurrentWindowBase = 0;
 	WindowSize = 10;
-	TotalPackets = 363;
+	TotalPackets = 0;
 	sendBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
 	recvBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
 	WindowManager = (WindowSectionWrapper *)malloc(WindowSize * sizeof(WindowSectionWrapper));
@@ -59,6 +59,8 @@ void InitRequest()
 	FileSize = recvBuff->PacketNum;
 	cout << "Size of the file is " << FileSize << endl;
 	AllocateFile("img.gif",recvBuff->PacketNum);
+	
+	TotalPackets = (int)GetNumChunks(FileSize);
 
 	for(int i = 0; i < WindowSize; i++)
 	{
