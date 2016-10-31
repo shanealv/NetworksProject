@@ -1,16 +1,8 @@
-//#include <stdio.h>
-//#include <stdlib.h>
 #include <cstdlib>
 #include <cstring>
-#include <string.h>
 #include <fcntl.h>
-#include <ios>
 #include <unistd.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-//#include <netinet/in.h>
 #include <arpa/inet.h>
-//#include <netdb.h>
 #include <iostream>
 #include <pthread.h>
 #include <queue>
@@ -22,7 +14,6 @@ using namespace std;
 
 int socket_fd;
 int file_fd;
-//char file_name[256];
 long file_size;
 long file_blocks;
 pthread_t * workers;
@@ -30,7 +21,43 @@ pthread_mutex_t file_lock;
 pthread_mutex_t queue_lock;
 pthread_mutex_t network_lock;
 
-queue<PacketRequest> requestQueue;
+queue<PacketRequest> * requestQueue = new queue<PacketRequest>();
+
+PacketRequest::PacketRequest()
+{
+	PacketNum = -1;
+}
+
+PacketRequest::PacketRequest(int packetNum, sockaddr_in requestAddress)
+{
+	PacketNum = packetNum;
+	memcpy(&RequestAddress, &requestAddress, sizeof(sockaddr_in));
+}
+
+PacketRequest::PacketRequest(const PacketRequest& other)
+{
+	if (this != &other)
+	{
+#ifdef DEBUG
+		cout << "COPY CTOR " << other.PacketNum << endl;
+#endif 
+		PacketNum = other.PacketNum;
+		memcpy(&RequestAddress, &other.RequestAddress, sizeof(sockaddr_in));
+	}
+}
+
+PacketRequest& PacketRequest::operator=(const PacketRequest& other)
+{
+	if (this != &other)
+	{
+#ifdef DEBUG
+		cout << "COPY ASSIGN " << other.PacketNum << endl;
+#endif 
+		PacketNum = other.PacketNum;
+		memcpy(&RequestAddress, &other.RequestAddress, sizeof(sockaddr_in));
+	}
+	return *this;
+}
 
 bool InitThreads(int numThreads, const char * filename, int fd)
 {
@@ -53,8 +80,6 @@ bool InitThreads(int numThreads, const char * filename, int fd)
 		return false;
 	}
 	
-	//file_name = filename;
-	//strcpy(file_name, filename);
 	file_fd = open(filename, O_RDONLY, 0);
 	file_size = (long) filesize(filename);
 	file_blocks = GetNumChunks(file_size);
@@ -72,10 +97,10 @@ bool InitThreads(int numThreads, const char * filename, int fd)
 	return true;
 }
 
-void QueueRequest(const PacketRequest & request)
+void QueueRequest(PacketRequest request)
 {
 	pthread_mutex_lock(&queue_lock);
-	requestQueue.push(request);
+	requestQueue->push(request);
 #ifdef DEBUG
 	cout << "[Queued] Packet Number " << request.PacketNum << endl;
 #endif
@@ -86,13 +111,13 @@ bool DequeueRequest(PacketRequest & request)
 {
 	bool success = false;
 	pthread_mutex_lock(&queue_lock);
-	if (!requestQueue.empty())
+	if (!requestQueue->empty())
 	{
-		request = requestQueue.front();
+		request = requestQueue->front();
 #ifdef DEBUG
 		cout << "[Dequeuing] " << request.PacketNum << endl;
 #endif
-		requestQueue.pop();
+		requestQueue->pop();
 #ifdef DEBUG
 		cout << "[Dequeued]  " << request.PacketNum << endl;
 #endif
@@ -133,20 +158,20 @@ void * WaitForRequests (void * arg)
 				SendPacket(&packet, request.RequestAddress);
 			}
 		}
-		usleep(50000);
+		usleep(500);
 	}
 }
 
-void SendPacket (const struct ServerPacket * packet, struct sockaddr_in & addr)
+void SendPacket (const ServerPacket * packet, sockaddr_in & addr)
 {
-	pthread_mutex_lock(&network_lock);
 	cout << "[Sent] Packet Number " << packet->PacketNum << endl;
-	int result = sendto(socket_fd, packet, sizeof(ServerPacket), 0, (struct sockaddr *)&addr, sizeof(sockaddr_in));
+	pthread_mutex_lock(&network_lock);
+	int result = sendto(socket_fd, packet, sizeof(ServerPacket), 0, (sockaddr *)&addr, sizeof(sockaddr_in));
+	pthread_mutex_unlock(&network_lock);
 	if (result < 0)
 	{
 		cerr << "ERROR: failed to send packet";
 	}
-	pthread_mutex_unlock(&network_lock);
 }
 
 

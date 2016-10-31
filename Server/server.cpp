@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h> 
@@ -16,29 +16,16 @@
 
 using namespace std;
 
-void error(const char *msg)
-{
-    perror(msg);
-    exit(1);
-}
-
 int main(int argc, char *argv[])
 {
-	struct sockaddr_in myaddr;	/* our address */
-	struct sockaddr_in remaddr;	/* remote address */
-	socklen_t addrlen = sizeof(remaddr);		/* length of addresses */
-	int recvlen;			/* # bytes received */
-	int fd;				/* our socket */
-	int msgcnt = 0;			/* count # of messages we received */
-	ClientPacket *rcvBuff = (ClientPacket *)malloc(sizeof(ClientPacket));
-	ServerPacket *sendBuff = (ServerPacket *)malloc(sizeof(ServerPacket));
-	ServerPacket newSend;
-
+	sockaddr_in myaddr;	/* our address */
+	socklen_t addrlen = sizeof(sockaddr_in);		/* length of addresses */
+	int fd;					/* our socket */
 
 	/* create a UDP socket */
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
-		perror("cannot create socket\n");
+		cerr << "cannot create socket" << endl;
 		return 0;
 	}
 
@@ -50,7 +37,7 @@ int main(int argc, char *argv[])
 
 	if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0)
 	{
-		perror("bind failed");
+		cerr << "bind failed" << endl;
 		return 0;
 	}
 	
@@ -65,19 +52,20 @@ int main(int argc, char *argv[])
 	while(true)
 	{
 		cout << "Waiting on port " << PORTNUM << "..." << endl;
-		recvlen = recvfrom(fd, rcvBuff, sizeof(ClientPacket), 0, (struct sockaddr *)&remaddr, &addrlen);
-		if (recvlen > 0)
-			cout << "Received request for packet " << rcvBuff->PacketNum << endl;
-		else
+		
+		ClientPacket data;
+		PacketRequest request;
+		int length = recvfrom(fd, &data, sizeof(ClientPacket), 0, (sockaddr *)&request.RequestAddress, &addrlen);
+		if (length <= 0)
 		{
 			cerr << "Uh oh - something went wrong!" << endl;
 			continue;
 		}
-		
-		PacketRequest request(rcvBuff->PacketNum, remaddr);
-		
+
+		cout << "Received request for packet " << data.PacketNum << endl;
+		request.PacketNum = data.PacketNum;
 		QueueRequest(request);
-		usleep(5000); // give time for the other threads to work
+		usleep(200); // give time for the other threads to work
 	}
 	/* never exits */
 }

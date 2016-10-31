@@ -1,5 +1,5 @@
-#ifndef PACKETS
-#define PACKETS
+#ifndef Packets_H
+#define Packets_H
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -9,20 +9,13 @@
 
 struct ClientPacket
 {
-//	char *ServerAddr;
-//	char *ReturnAddr;
 	int PacketNum;
 };
 
 struct ServerPacket
 {
-	//char *ReturnAddr;
 	char Payload[PAYLOAD_SIZE];
 	int PacketNum;
 };
 
 #endif
-
-//Printing readable IP from struct sockaddr_in
-//	char *ip = inet_ntoa(myaddr.sin_addr);
-//	cout << ip << endl;

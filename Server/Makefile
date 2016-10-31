@@ -1,5 +1,5 @@
-CC=g++ -std=c++0x
-CFLAGS = -g -DDEBUG
+CC=g++ -std=gnu++0x
+#CFLAGS = -g -DDEBUG
 SHARED = ../Shared/
 # uncomment this for SunOS
 # LIBS = -lsocket -lnsl
@@ -19,3 +19,8 @@ FileService.o: $(SHARED)FileService.cpp
 
 clean:
 	rm -f server *.o 
+	
+rebuild: clean all
+
+debug: rebuild
+	./server
