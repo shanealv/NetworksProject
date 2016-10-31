@@ -100,7 +100,7 @@ void Request(int packetNumFirst, int packetNumLast)
 				break;
 			}
 		
-		usleep(3000);
+		usleep(6000);
 	}
 	
 }
