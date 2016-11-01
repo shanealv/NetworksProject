@@ -23,3 +23,6 @@ To implement concurrency of file serving, the server has a thread pool of worker
 
 # Pipelining and selective repeat in Client
 The Client will request all packets in a window at once. The window at any time has a base n and bound of n + 24 (25 packets in total). Once all packets have been requested, the client will then recieve the packets from its input buffer. It will write the packet that corresponds to the window base to the file being received, advance the window base, and repeat. Once the entire window has been written or the packet corresponding to the window base is not found, the client requests packets for the new window. The client will not request any packets it has recieved and will ignore any duplicate packets it recieves.
+
+# Debug mode
+The Server has a debug mode that can be turned on but uncommenting the '-DDEBUG' flag in Makefile in the 'Server' directory. If debug mode is used, the Server will drop packets at random - simulating packet loss.

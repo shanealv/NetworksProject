@@ -1,5 +1,5 @@
 CC=g++ -std=gnu++0x
-CFLAGS = -g -DDEBUG
+CFLAGS = -g #-DDEBUG
 SHARED = ../Shared/
 # uncomment this for SunOS
 # LIBS = -lsocket -lnsl
